@@ -1,7 +1,10 @@
-(ns code-challenge.core
-  (:gen-class))
+(ns code-challenge.core)
 
-(defn -main
-  "I don't do a whole lot ... yet."
-  [& args]
-  (println "Hello, World!"))
+(defn verify_account_initialized
+  ([account, transaction]
+   (cond
+     (= (get account :status) :not_initialized) [:error, :not_initialized]
+     (= (get account :status) :initialized) [:ok, account, transaction]
+     )
+   )
+  )
