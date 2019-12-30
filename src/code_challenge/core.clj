@@ -16,14 +16,32 @@
 
    (cond
      (= response :error)
-     [:error (first (rest previous_validation))]
+     [:error (nth previous_validation 1)]
 
-     (and (= response :ok)
-          (= (get (nth previous_validation 1) :active_card) false))
+     (= (get (nth previous_validation 1) :active_card) false)
      [:error :card_not_active]
 
-     (and (= (nth previous_validation 0) :ok)
-          (= (get (nth previous_validation 1) :active_card) true))
+     (= (get (nth previous_validation 1) :active_card) true)
+     [:ok (nth previous_validation 1) (nth previous_validation 2)]
+     )
+   )
+  )
+
+(defn verify_account_limit
+  ([previous_validation]
+   (def response (nth previous_validation 0))
+   (cond
+     (= response :error)
+     [:error (nth previous_validation 1)]
+
+     (<
+       (get (nth previous_validation 1) :available_limit)
+       (get (nth previous_validation 2) :amount))
+     [:error :insufficient_limit (nth previous_validation 1)]
+
+     (<
+       (get (nth previous_validation 2) :amount)
+       (get (nth previous_validation 1) :available_limit))
      [:ok (nth previous_validation 1) (nth previous_validation 2)]
      )
    )

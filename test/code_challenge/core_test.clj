@@ -39,3 +39,27 @@
                   (is (= [:ok account transaction] (verify_account_active success_previous_validation)))
                   )
          )
+
+(deftest insufficient-limit-error-test
+         (testing "Given an error from previous validation I expect the previous error"
+                  (is (= [:error, :card_not_active] (verify_account_limit [:error, :card_not_active])))
+                  )
+         )
+
+(deftest insufficient-limit-verify-with-error-test
+         (testing "Given an account and a transaction with different amounts I expected an error"
+                  (def account {:active_card true :available_limit 100})
+                  (def transaction {:amount 200})
+                  (def success_previous_validation [:ok account transaction])
+                  (is (= [:error :insufficient_limit account] (verify_account_limit success_previous_validation)))
+                  )
+         )
+
+(deftest insufficient-limit-verify-success-test
+         (testing "Given an account and a transaction with less amount than the limit I expected the account and transaction"
+                  (def account {:active_card true :available_limit 100})
+                  (def transaction {:amount 20})
+                  (def success_previous_validation [:ok account transaction])
+                  (is (= [:ok account transaction] (verify_account_limit success_previous_validation)))
+                  )
+         )
