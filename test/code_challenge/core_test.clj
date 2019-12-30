@@ -135,6 +135,46 @@
                     )
                   (def transaction {:amount 20 :time 1577686928777})
                   (def success_previous_validation [:ok account transaction])
-                  (is (= [:ok account transaction] (verify_frequency_interval success_previous_validation)))
+                  (is (= [:ok :last_transaction_in_interval account transaction] (verify_frequency_interval success_previous_validation)))
                   )
          )
+
+(deftest high-frequency-small-interval-test-case6
+         (testing "Given an account with 3 transactions (1 in interval) I expected the account and the transaction"
+                  (def account
+                    {:active_card true
+                     :authorized_transactions
+                     '({:amount 20 :time 1577686918777}
+                       {:amount 20 :time 1577686778777}
+                       {:amount 20 :time 1577686778777})
+                     }
+                    )
+                  (def transaction {:amount 20 :time 1577686928777})
+                  (def success_previous_validation [:ok account transaction])
+                  (is (= [:ok :second_transaction_in_interval account transaction] (verify_frequency_interval success_previous_validation)))
+                  )
+         )
+
+(deftest doubled-transaction-test-case-previous-error
+         (testing "Given an error from previous validation I expect the previous error"
+                  (def account {:active_card true})
+                  (def transaction {:amount 20 :time 1577686928777})
+                  (def previous_validation [:error :high_frequency_small_interval account])
+                  (is (= [:error :high_frequency_small_interval account] (verify_doubled_transaction previous_validation)))
+                  )
+         )
+
+;(deftest doubled-transaction-test-case1
+;         (testing "Given an account with 1 transaction similar to the new transaction I expected an error"
+;                  (def account
+;                    {:active_card true
+;                     :available_limit 100
+;                     :authorized_transactions
+;                     '({:amount 20 :merchant "Nubank" :time 1577686918777})
+;                     }
+;                    )
+;                  (def transaction {:amount 20 :merchant "Nubank" :time 1577686928777})
+;                  (def success_previous_validation [:ok account transaction])
+;                  (is (= [:error :doubled_transaction account] (verify_doubled_transaction success_previous_validation)))
+;                  )
+;         )

@@ -62,12 +62,13 @@
   (def second_comparation (< second_transaction_diff 120000))
   (def third_comparation (< third_transaction_diff 120000))
 
-
   (cond
     (= [first_comparation second_comparation third_comparation] [true true true])
     [:error :high_frequency_small_interval account]
     (= [first_comparation second_comparation third_comparation] [true true false])
-    [:ok account transaction]
+    [:ok :last_transaction_in_interval account transaction]
+    (= [first_comparation second_comparation third_comparation] [true false false])
+    [:ok :second_transaction_in_interval account transaction]
     )
   )
 
@@ -81,6 +82,16 @@
      [:ok (nth previous_validation 1) (nth previous_validation 2)]
      (> (count (get (nth previous_validation 1) :authorized_transactions)) 2)
      (apply_validation_interval (nth previous_validation 1) (nth previous_validation 2))
+     )
+   )
+  )
+
+(defn verify_doubled_transaction
+  ([previous_validation]
+   (def response (nth previous_validation 0))
+   (cond
+     (= response :error)
+     [:error (nth previous_validation 1) (nth previous_validation 2)]
      )
    )
   )
