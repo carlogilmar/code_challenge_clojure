@@ -49,7 +49,22 @@
 
 (defn apply_validation_interval
   [account transaction]
+
+  (def previous_transaction (first(get account :authorized_transactions)))
+  (def last_transaction (second(get account :authorized_transactions)))
+
+  (def previous_time_diff (- (get transaction :time) (get previous_transaction :time)))
+  (def last_time_diff (- (get transaction :time) (get last_transaction :time)))
+
+  (def previous_comparation (< previous_time_diff 120000))
+  (def last_comparation (< last_time_diff 120000))
+
+  (cond
+    (= [previous_comparation last_comparation] [true true])
     [:ok account transaction]
+    (= [previous_comparation last_comparation] [true false])
+    [:ok account transaction]
+    )
   )
 
 (defn verify_frequency_interval
