@@ -50,19 +50,23 @@
 (defn apply_validation_interval
   [account transaction]
 
-  (def previous_transaction (first(get account :authorized_transactions)))
-  (def last_transaction (second(get account :authorized_transactions)))
+  (def first_transaction (first(get account :authorized_transactions)))
+  (def second_transaction (second(get account :authorized_transactions)))
+  (def third_transaction (first(rest(rest(get account :authorized_transactions)))))
 
-  (def previous_time_diff (- (get transaction :time) (get previous_transaction :time)))
-  (def last_time_diff (- (get transaction :time) (get last_transaction :time)))
+  (def first_transaction_diff (- (get transaction :time) (get first_transaction :time)))
+  (def second_transaction_diff (- (get transaction :time) (get second_transaction :time)))
+  (def third_transaction_diff (- (get transaction :time) (get third_transaction :time)))
 
-  (def previous_comparation (< previous_time_diff 120000))
-  (def last_comparation (< last_time_diff 120000))
+  (def first_comparation (< first_transaction_diff 120000))
+  (def second_comparation (< second_transaction_diff 120000))
+  (def third_comparation (< third_transaction_diff 120000))
+
 
   (cond
-    (= [previous_comparation last_comparation] [true true])
-    [:ok account transaction]
-    (= [previous_comparation last_comparation] [true false])
+    (= [first_comparation second_comparation third_comparation] [true true true])
+    [:error :high_frequency_small_interval account]
+    (= [first_comparation second_comparation third_comparation] [true true false])
     [:ok account transaction]
     )
   )
@@ -73,11 +77,9 @@
    (cond
      (= response :error)
      [:error (nth previous_validation 1) (nth previous_validation 2)]
-     (= (count (get (nth previous_validation 1) :authorized_transactions)) 0)
+     (< (count (get (nth previous_validation 1) :authorized_transactions)) 3)
      [:ok (nth previous_validation 1) (nth previous_validation 2)]
-     (= (count (get (nth previous_validation 1) :authorized_transactions)) 1)
-     [:ok (nth previous_validation 1) (nth previous_validation 2)]
-     (> (count (get (nth previous_validation 1) :authorized_transactions)) 1)
+     (> (count (get (nth previous_validation 1) :authorized_transactions)) 2)
      (apply_validation_interval (nth previous_validation 1) (nth previous_validation 2))
      )
    )

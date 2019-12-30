@@ -106,12 +106,31 @@
          )
 
 (deftest high-frequency-small-interval-test-case4
-         (testing "Given an account with 2 transaction (2 in interval) I expected the account and the transaction"
+         (testing "Given an account with 3 transactions (3 in interval) I expected an error"
                   (def account
                     {:active_card true
                      :available_limit 100
                      :authorized_transactions
-                     '({:amount 20 :time 1577686868777} {:amount 20 :time 1577686828777})
+                     '({:amount 20 :time 1577686918777}
+                       {:amount 20 :time 1577686888777}
+                       {:amount 20 :time 1577686828777})
+                     }
+                    )
+                  (def transaction {:amount 20 :time 1577686928777})
+                  (def success_previous_validation [:ok account transaction])
+                  (is (= [:error :high_frequency_small_interval account] (verify_frequency_interval success_previous_validation)))
+                  )
+         )
+
+(deftest high-frequency-small-interval-test-case5
+         (testing "Given an account with 3 transactions (2 in interval) I expected the account and the transaction"
+                  (def account
+                    {:active_card true
+                     :available_limit 100
+                     :authorized_transactions
+                     '({:amount 20 :time 1577686918777}
+                       {:amount 20 :time 1577686888777}
+                       {:amount 20 :time 1577686778777})
                      }
                     )
                   (def transaction {:amount 20 :time 1577686928777})
