@@ -63,3 +63,44 @@
                   (is (= [:ok account transaction] (verify_account_limit success_previous_validation)))
                   )
          )
+
+(deftest high-frequency-small-interval-test
+         (testing "Given an error I expected the error, the error msg and the account"
+                  (def account {:active_card true :available_limit 100 :authorized_transactions '()})
+                  (def failed_previous_validation [:error :insufficient_limit account])
+                  (is (= [:error :insufficient_limit account] (verify_frequency_interval failed_previous_validation)))
+                  )
+         )
+
+(deftest high-frequency-small-interval-test
+         (testing "Given an account without transactions I expected the account and the transaction"
+                  (def account {:active_card true :available_limit 100 :authorized_transactions '()})
+                  (def transaction {:amount 20})
+                  (def success_previous_validation [:ok account transaction])
+                  (is (= [:ok account transaction] (verify_frequency_interval success_previous_validation)))
+                  )
+         )
+
+(deftest high-frequency-small-interval-test
+         (testing "Given an account with 1 transaction I expected the account and the transaction"
+                  (def account {:active_card true :available_limit 100 :authorized_transactions '({:amount 20})})
+                  (def transaction {:amount 20})
+                  (def success_previous_validation [:ok account transaction])
+                  (is (= [:ok account transaction] (verify_frequency_interval success_previous_validation)))
+                  )
+         )
+
+(deftest high-frequency-small-interval-test
+         (testing "Given an account with 2 transaction in interval I expected the account and the transaction"
+                  (def account
+                    {:active_card true
+                     :available_limit 100
+                     :authorized_transactions
+                     '({:amount 20 :time 1577686868777} {:amount 20 :time 1577686688777})
+                     }
+                    )
+                  (def transaction {:amount 20 :time 1577686928777})
+                  (def success_previous_validation [:ok account transaction])
+                  (is (= [:ok account transaction] (verify_frequency_interval success_previous_validation)))
+                  )
+         )
