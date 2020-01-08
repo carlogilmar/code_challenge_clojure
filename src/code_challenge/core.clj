@@ -86,17 +86,39 @@
    )
   )
 
-(defn apply_validation_in_all_list
-  [account transaction]
+(defn search_double_transactions
+  [authorized_transactions account transaction]
   (def amount (get transaction :amount))
   (def merchant (get transaction :merchant))
-  (def authorized_transactions (get account :authorized_transactions))
   (def searching
     (some #( and (= (get % :amount) amount) (= (get % :merchant) merchant) ) authorized_transactions))
   (cond
     (= searching nil) [:ok account transaction]
     (= searching true) [:error :doubled_transaction account]
     )
+  )
+
+(defn apply_double_validation_in_all_list
+  [account transaction]
+  (def authorized_transactions (get account :authorized_transactions))
+  (search_double_transactions authorized_transactions account transaction)
+  )
+
+(defn apply_double_validation_for_second_transaction
+  [account transaction]
+  (def transactions (get account :authorized_transactions))
+  (def transaction_to_compare (first transactions))
+  (def authorized_transactions (conj '() transaction_to_compare))
+  (search_double_transactions authorized_transactions  account transaction)
+  )
+
+(defn apply_double_validation_for_last_transaction
+  [account transaction]
+  (def transactions (get account :authorized_transactions))
+  (def transaction1_to_compare (first transactions))
+  (def transaction2_to_compare (first (rest transactions)))
+  (def authorized_transactions (conj '() transaction1_to_compare transaction2_to_compare))
+  (search_double_transactions authorized_transactions  account transaction)
   )
 
 (defn verify_doubled_transaction
@@ -106,7 +128,11 @@
      (= response :error)
      [:error (nth previous_validation 1) (nth previous_validation 2)]
      (= (nth previous_validation 1) :first_transactions)
-     (apply_validation_in_all_list (nth previous_validation 2) (nth previous_validation 3))
+     (apply_double_validation_in_all_list (nth previous_validation 2) (nth previous_validation 3))
+     (= (nth previous_validation 1) :second_transaction_in_interval)
+     (apply_double_validation_for_second_transaction(nth previous_validation 2) (nth previous_validation 3))
+     (= (nth previous_validation 1) :last_transaction_in_interval)
+     (apply_double_validation_for_last_transaction(nth previous_validation 2) (nth previous_validation 3))
      )
    )
   )
