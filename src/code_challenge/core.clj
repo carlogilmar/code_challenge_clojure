@@ -79,11 +79,24 @@
      (= response :error)
      [:error (nth previous_validation 1) (nth previous_validation 2)]
      (< (count (get (nth previous_validation 1) :authorized_transactions)) 3)
-     [:ok (nth previous_validation 1) (nth previous_validation 2)]
+     [:ok :first_transactions (nth previous_validation 1) (nth previous_validation 2)]
      (> (count (get (nth previous_validation 1) :authorized_transactions)) 2)
      (apply_validation_interval (nth previous_validation 1) (nth previous_validation 2))
      )
    )
+  )
+
+(defn apply_validation_in_all_list
+  [account transaction]
+  (def amount (get transaction :amount))
+  (def merchant (get transaction :merchant))
+  (def authorized_transactions (get account :authorized_transactions))
+  (def searching
+    (some #( and (= (get % :amount) amount) (= (get % :merchant) merchant) ) authorized_transactions))
+  (cond
+    (= searching nil) [:ok account transaction]
+    (= searching true) [:error :doubled_transaction account]
+    )
   )
 
 (defn verify_doubled_transaction
@@ -92,6 +105,8 @@
    (cond
      (= response :error)
      [:error (nth previous_validation 1) (nth previous_validation 2)]
+     (= (nth previous_validation 1) :first_transactions)
+     (apply_validation_in_all_list (nth previous_validation 2) (nth previous_validation 3))
      )
    )
   )
