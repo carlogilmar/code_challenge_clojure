@@ -144,7 +144,7 @@
      verify_account_active
      verify_account_limit
      verify_frequency_interval
-     ;verify_doubled_transaction
+     verify_doubled_transaction
      )
    )
   )

@@ -285,10 +285,60 @@
                   )
          )
 
-;(deftest running_pipeline_for_authorizer_case0
-;         (testing "Given a not initilized acccount I expected an error"
-;                  (def account {:status :not_initialized})
-;                  (def transaction {:amount 20 :merchant "Nubank" :time 1577686928777})
-;                  (is (= [:ok account transaction] (authorize_transaction account transaction)))
-;                  )
-;         )
+(deftest running_pipeline_for_authorizer_case0
+         (testing "Given a not initilized acccount I expected an error"
+                  (def account {:status :not_initialized :active_card true})
+                  (def transaction {:amount 20 :merchant "Nubank" :time 1577686928777})
+                  (is (= [:error :not_initialized account] (authorize_transaction account transaction)))
+                  )
+         )
+
+(deftest running_pipeline_for_authorizer_case1
+         (testing "Given an acccount inactive I expected an error"
+                  (def account {:status :initialized :active_card false})
+                  (def transaction {:amount 20 :merchant "Nubank" :time 1577686928777})
+                  (is (= [:error :card_not_active account] (authorize_transaction account transaction)))
+                  )
+         )
+
+(deftest running_pipeline_for_authorizer_case2
+         (testing "Given an transaction with amount more than the limit of the account I expected an error"
+                  (def account {:available_limit 100 :status :initialized :active_card true})
+                  (def transaction {:amount 230 :merchant "Nubank" :time 1577686928777})
+                  (is (= [:error :insufficient_limit account] (authorize_transaction account transaction)))
+                  )
+         )
+
+(deftest running_pipeline_for_authorizer_case3
+         (testing "Given an account with the transactions enough by the limit, I expected an error"
+                  (def account
+                    {:active_card true
+                     :status :initialized
+                     :available_limit 100
+                     :authorized_transactions
+                     '({:amount 20 :merchant "Nubank1" :time 1577686918775},
+                       {:amount 42 :merchant "Nubank2" :time 1577686917776}
+                       {:amount 43 :merchant "Nubank3" :time 1577686917777}
+                       {:amount 44 :merchant "Nubank4" :time 1577686917778}
+                       )
+                     }
+                    )
+                  (def transaction {:amount 42 :merchant "Nubank2" :time 1577686928774})
+                  (is (= [:error :high_frequency_small_interval account] (authorize_transaction account transaction)))
+                  )
+         )
+
+(deftest running_pipeline_for_authorizer_case4
+         (testing "Given an account with a transaction doubled, I expected an error"
+                  (def account
+                    {:active_card true
+                     :status :initialized
+                     :available_limit 100
+                     :authorized_transactions
+                     '({:amount 20 :merchant "Nubank" :time 1577686918775})
+                     }
+                    )
+                  (def transaction {:amount 20 :merchant "Nubank" :time 1577686928774})
+                  (is (= [:error :doubled_transaction account] (authorize_transaction account transaction)))
+                  )
+         )
