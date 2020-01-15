@@ -6,7 +6,7 @@
          (testing "Given an not initialized account I expect an error"
                   (def account {:status :not_initialized})
                   (def transaction {:amount 10})
-                  (is (= [:error, :not_initialized] (verify_account_initialized account transaction)))
+                  (is (= [:error, :not_initialized, account] (verify_account_initialized account transaction)))
                   ))
 
 (deftest account-initialized-test
@@ -18,7 +18,8 @@
 
 (deftest account-not-active-test
          (testing "Given an error from previous validation I expect the previous error"
-                  (is (= [:error, :not_initialized] (verify_account_active [:error, :not_initialized])))
+                  (def account {:status :not_initialized})
+                  (is (= [:error, :not_initialized, account] (verify_account_active [:error, :not_initialized, account])))
                   )
          )
 
@@ -27,7 +28,7 @@
                   (def account {:active_card false})
                   (def transaction {:amount 10})
                   (def success_previous_validation [:ok, account, transaction])
-                  (is (= [:error :card_not_active] (verify_account_active success_previous_validation)))
+                  (is (= [:error :card_not_active account] (verify_account_active success_previous_validation)))
                   )
          )
 
@@ -42,7 +43,8 @@
 
 (deftest insufficient-limit-error-test
          (testing "Given an error from previous validation I expect the previous error"
-                  (is (= [:error, :card_not_active] (verify_account_limit [:error, :card_not_active])))
+                  (def account {:active_card false})
+                  (is (= [:error, :card_not_active, false] (verify_account_limit [:error, :card_not_active, false])))
                   )
          )
 
@@ -282,3 +284,11 @@
                   (is (= [:ok account transaction] (verify_doubled_transaction success_previous_validation)))
                   )
          )
+
+;(deftest running_pipeline_for_authorizer_case0
+;         (testing "Given a not initilized acccount I expected an error"
+;                  (def account {:status :not_initialized})
+;                  (def transaction {:amount 20 :merchant "Nubank" :time 1577686928777})
+;                  (is (= [:ok account transaction] (authorize_transaction account transaction)))
+;                  )
+;         )

@@ -3,7 +3,7 @@
 (defn verify_account_initialized
   ([account, transaction]
    (cond
-     (= (get account :status) :not_initialized) [:error, :not_initialized]
+     (= (get account :status) :not_initialized) [:error, :not_initialized, account]
      (= (get account :status) :initialized) [:ok, account, transaction]
      )
    )
@@ -16,10 +16,10 @@
 
    (cond
      (= response :error)
-     [:error (nth previous_validation 1)]
+     [:error :not_initialized (nth previous_validation 2)]
 
      (= (get (nth previous_validation 1) :active_card) false)
-     [:error :card_not_active]
+     [:error :card_not_active (nth previous_validation 1)]
 
      (= (get (nth previous_validation 1) :active_card) true)
      [:ok (nth previous_validation 1) (nth previous_validation 2)]
@@ -32,7 +32,7 @@
    (def response (nth previous_validation 0))
    (cond
      (= response :error)
-     [:error (nth previous_validation 1)]
+     [:error (nth previous_validation 1) (nth previous_validation 2)]
 
      (<
        (get (nth previous_validation 1) :available_limit)
@@ -133,6 +133,18 @@
      (apply_double_validation_for_second_transaction(nth previous_validation 2) (nth previous_validation 3))
      (= (nth previous_validation 1) :last_transaction_in_interval)
      (apply_double_validation_for_last_transaction(nth previous_validation 2) (nth previous_validation 3))
+     )
+   )
+  )
+
+(defn authorize_transaction
+  ([account transaction]
+   (->
+     (verify_account_initialized account transaction)
+     verify_account_active
+     verify_account_limit
+     verify_frequency_interval
+     ;verify_doubled_transaction
      )
    )
   )
